@@ -1,32 +1,68 @@
-🔧 Day 1 – Engineering Log (Robotic Leg Project)
+# 🔧 Day 1 – Engineering Log (Robotic Leg Project)
 
-📌 Focus: Understanding torque and applying it to motor selection
+## 📌 Focus
+Understanding torque and its application in selecting a suitable motor for a quadruped robot leg.
 
-⚙️ What I Did
+---
 
-* Learned the concept of torque and its role in rotational motion
-* Converted real-world values (mass, distance) into usable units
-* Applied torque calculations to estimate motor requirements
+## ⚙️ Work Completed
 
-⚠️ Challenges
+- Studied the concept of torque as a rotational force  
+- Converted motor specifications from kg·cm to SI units (Nm)  
+- Applied torque equations to estimate lifting capacity at different arm lengths (2 cm, 5 cm, 10 cm)  
+- Analyzed how motor voltage (6V vs 4.8V) affects torque output  
 
-* Initially confused force vs torque (linear vs rotational effect)
-* Difficulty visualizing how distance from the pivot affects torque
+---
 
-💡 Key Insights
+## ⚠️ Challenges Faced
 
-* Torque is not just force—it’s force applied at a distance
-* Increasing distance from the joint significantly increases torque
-* Real-world torque is always less than theoretical due to friction, inefficiencies, and load distribution
+- Initially confused **force (linear)** vs **torque (rotational)**  
+- Difficulty visualizing how **distance from the joint (radius)** affects lifting capability  
+- Understanding why theoretical torque differs from real-world performance  
 
-📊 Core Formula Used
-\tau = F \cdot r
+---
 
-🔍 Reflection
-Understanding torque clarified why motor choice is critical. A motor that looks strong on paper may fail in real conditions if distance and load aren’t considered properly.
+## 💡 Key Insights
 
-➡️ Next Steps
+- Torque is **force applied at a distance**, not just force alone  
+- Increasing arm length significantly reduces lifting capacity  
+- Motor performance depends heavily on **supply voltage**  
+- Real-world torque is lower due to:
+  - friction  
+  - heat losses  
+  - inefficiencies in the system  
 
-* Perform detailed torque calculations for each leg joint
-* Factor in safety margin (1.5x–2x torque)
-* Begin validating motor selection with real constraints
+---
+
+## 📊 Core Concept
+
+Torque relationship:
+
+τ = F × r  
+
+Where:
+- F = m × g  
+- τ = m × g × r  
+
+👉 This equation connects motor strength with load and distance.
+
+---
+
+## 🔍 Reflection
+
+Understanding torque provided clarity on **why motor selection is critical** in robot design.
+
+Even if a motor appears strong based on specifications, it may fail when:
+- the leg length is too large  
+- the load exceeds practical limits  
+- real-world losses are considered  
+
+This highlights the importance of combining **theory with practical constraints**.
+
+---
+
+## ➡️ Next Steps
+
+- Use these calculations to evaluate if the motor can support the robot weight (Day 2)  
+- Introduce a safety factor (1.5×–2×) in torque calculations  
+- Begin translating torque limits into **leg design constraints**  
