@@ -7,19 +7,108 @@ This forms the foundation for designing a quadruped robot leg.
 
 ---
 
-## Why This Motor?
+## Why Do We Need a Motor?
 
-We selected the **TowerPro MG996R servo motor** because:
+In a quadruped robot, each leg must:
+- Lift part of the robot’s body weight  
+- Move forward and backward to enable walking  
+- Maintain balance while supporting dynamic loads  
 
-- It is widely used in robotics projects
-- It provides relatively high torque at low cost
-- It is suitable for small to medium load applications like robotic legs
+To achieve this, we need an actuator that can:
+- Provide controlled rotational motion  
+- Deliver sufficient torque to lift the robot  
+- Be precisely controlled for walking gait  
 
-### Motor Specifications
+👉 A motor acts as the **muscle of the robot**, converting electrical energy into mechanical movement.
 
-- Stall Torque @ 6V = 13 kg·cm  
-- Stall Torque @ 4.8V = 9.4 kg·cm  
+---
 
+## Why a Servo Motor?
+
+Instead of using a normal DC motor, we use a **servo motor** because:
+
+- It provides **precise position control** (important for leg movement)
+- It can hold a specific angle under load
+- It integrates:
+  - Motor  
+  - Gear system  
+  - Feedback control  
+
+👉 This makes it ideal for robotic joints.
+
+---
+
+## Why TowerPro MG996R Specifically?
+
+We selected the **TowerPro MG996R servo motor** based on the following engineering considerations:
+
+### 1. Torque Requirement
+From our calculations, each leg must support a portion of the robot’s weight.
+
+👉 Therefore, we need a motor with **sufficient torque**
+
+- MG996R provides:
+  - 13 kg·cm @ 6V  
+  - 9.4 kg·cm @ 4.8V  
+
+This makes it suitable for:
+- Small to medium-sized quadruped robots  
+- Initial prototyping and testing  
+
+---
+
+### 2. Cost vs Performance
+
+- High-torque industrial servos are expensive  
+- MG996R offers a **good balance between cost and torque**
+
+👉 Ideal for student projects and early-stage design
+
+---
+
+### 3. Availability and Ease of Use
+
+- Easily available in the market  
+- Works with common controllers (Arduino, etc.)  
+- Simple PWM control  
+
+👉 Reduces complexity in early development
+
+---
+
+### 4. Built-in Gear System
+
+The servo contains internal gears that:
+- Increase torque  
+- Reduce speed  
+
+👉 This is important because:
+- Robot legs require **high torque, low speed motion**
+
+---
+
+## What Will This Motor Do in Our Robot?
+
+In the quadruped leg:
+
+- The motor will act as a **joint actuator**
+- It will rotate the leg segment
+- It will **lift and support the robot’s weight**
+- It will control leg movement during walking
+
+👉 Each leg may use multiple such motors (hip, knee, etc.)
+
+---
+
+## Design Implication
+
+Choosing this motor directly affects:
+
+- Maximum robot weight  
+- Leg length  
+- Stability and walking capability  
+
+👉 This is why we perform torque calculations before designing the leg
 ### What This Means
 
 This torque value represents the **maximum rotational force** the motor can provide when it is not moving (stall condition).
@@ -84,6 +173,8 @@ These values simulate **different leg lengths**:
 ### Formula Used
 
 \tau = m \cdot g \cdot r
+
+In simple terms => τ = m × g × r
 
 Where:
 - τ = torque (Nm) → from motor specification  
