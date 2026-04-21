@@ -1,339 +1,217 @@
-# Day 1: Understanding Torque and Motor Capability
+# Day 1: Torque Analysis and Motor Capability
+
+> Working through the MG996R torque rating, converting it into usable numbers, and figuring out what arm lengths are actually viable before committing to a leg geometry.
+
+---
+
+## Table of Contents
+
+- [Objective](#objective)
+- [Why This Motor](#why-this-motor)
+- [Converting the Spec Sheet Numbers](#converting-the-spec-sheet-numbers)
+- [The Theory](#the-theory)
+- [Why These Three Arm Lengths](#why-these-three-arm-lengths)
+- [Calculations at 6V](#calculations-at-6v)
+- [Calculations at 4.8V](#calculations-at-48v)
+- [Results Summary](#results-summary)
+- [On Stall Torque](#on-stall-torque)
+- [Notes and Observations](#notes-and-observations)
+- [Conclusions](#conclusions)
+
+---
 
 ## Objective
-The goal of this study is to understand how a servo motor’s torque translates into real-world lifting capability, and how arm length (leg length) affects performance.
 
-This forms the foundation for designing a quadruped robot leg.
+Before designing anything physical, we needed to answer one question: given the MG996R rated torque, what can it actually support at different arm lengths?
 
----
-
-## Why Do We Need a Motor?
-
-In a quadruped robot, each leg must:
-- Lift part of the robot’s body weight  
-- Move forward and backward to enable walking  
-- Maintain balance while supporting dynamic loads  
-
-To achieve this, we need an actuator that can:
-- Provide controlled rotational motion  
-- Deliver sufficient torque to lift the robot  
-- Be precisely controlled for walking gait  
-
-👉 A motor acts as the **muscle of the robot**, converting electrical energy into mechanical movement.
+The reason this matters is that torque alone does not tell you much. A spec sheet says 13 kg·cm. That number means nothing without knowing the distance at which the load is applied. This session was about turning that single spec into a set of load limits at real leg lengths, and seeing whether the motor is capable of supporting a small quadruped at all.
 
 ---
 
-## Why a Servo Motor?
+## Why This Motor
 
-Instead of using a normal DC motor, we use a **servo motor** because:
+The MG996R was chosen for a few straightforward reasons.
 
-- It provides **precise position control** (important for leg movement)
-- It can hold a specific angle under load
-- It integrates:
-  - Motor  
-  - Gear system  
-  - Feedback control  
+The torque output at 13 kg·cm at 6V is high enough to be worth analyzing for a small quadruped. It is a metal gear servo, so it holds up better under load than plastic gear alternatives like the SG90. It is widely available, runs on standard PWM, and is cheap enough that we can stress test it without worrying about the cost of failure.
 
-👉 This makes it ideal for robotic joints.
+More importantly, it is a realistic choice. The goal here is not to use the most powerful servo available and have comfortable margins everywhere. It is to understand what a specific motor can and cannot do, and design within those limits. The MG996R sits right in the range where the design choices actually matter.
+
+In the leg, this servo acts as the joint actuator. It holds the leg in position during stance, rotates the segment during swing, and bears the robot body weight through the joint. If the torque budget is wrong, the joint fails under load. That is why this calculation has to be done before anything gets built.
 
 ---
 
-## Why TowerPro MG996R Specifically?
+## Converting the Spec Sheet Numbers
 
-We selected the **TowerPro MG996R servo motor** based on the following engineering considerations:
+Motor datasheets report torque in kg·cm. Physics equations need Newton-meters. Before doing anything else, the numbers have to be in the right units.
 
-### 1. Torque Requirement
-From our calculations, each leg must support a portion of the robot’s weight.
+```
+1 kg.cm = (1 x 9.8) / 100 = 0.0981 N.m
 
-👉 Therefore, we need a motor with **sufficient torque**
+At 6V:   13 x 9.8 / 100 = 1.274 N.m
+At 4.8V: 9.4 x 9.8 / 100 = 0.9212 N.m
+```
 
-- MG996R provides:
-  - 13 kg·cm @ 6V  
-  - 9.4 kg·cm @ 4.8V  
+| Supply Voltage | Datasheet Value | SI Value  |
+|----------------|-----------------|-----------|
+| 6 V            | 13 kg·cm        | 1.274 N·m |
+| 4.8 V          | 9.4 kg·cm       | 0.922 N·m |
 
-This makes it suitable for:
-- Small to medium-sized quadruped robots  
-- Initial prototyping and testing  
-
----
-
-### 2. Cost vs Performance
-
-- High-torque industrial servos are expensive  
-- MG996R offers a **good balance between cost and torque**
-
-👉 Ideal for student projects and early-stage design
+All calculations from this point use the SI values. The 6V case is the primary reference since that is the operating voltage the design is built around.
 
 ---
 
-### 3. Availability and Ease of Use
+## The Theory
 
-- Easily available in the market  
-- Works with common controllers (Arduino, etc.)  
-- Simple PWM control  
+Torque is the product of force and the distance at which it acts:
 
-👉 Reduces complexity in early development
+```
+t = F x r
+```
 
----
+Since force comes from supporting a mass against gravity:
 
-### 4. Built-in Gear System
+```
+F = m x g
+```
 
-The servo contains internal gears that:
-- Increase torque  
-- Reduce speed  
+Combining these:
 
-👉 This is important because:
-- Robot legs require **high torque, low speed motion**
+```
+t = m x g x r
+```
 
----
+The motor provides a fixed torque t. Gravity g is constant at 9.8 m/s². That leaves two variables: mass m and radius r. If r is known, we can solve for the maximum mass the motor can hold at that distance:
 
-## What Will This Motor Do in Our Robot?
+```
+m = t / (g x r)
+```
 
-In the quadruped leg:
-
-- The motor will act as a **joint actuator**
-- It will rotate the leg segment
-- It will **lift and support the robot’s weight**
-- It will control leg movement during walking
-
-👉 Each leg may use multiple such motors (hip, knee, etc.)
+This is the calculation run three times, at three different arm lengths.
 
 ---
 
-## Design Implication
+## Why These Three Arm Lengths
 
-Choosing this motor directly affects:
+Three arm lengths were chosen to cover the practical range of leg segment sizes for a small quadruped.
 
-- Maximum robot weight  
-- Leg length  
-- Stability and walking capability  
+| Arm Length | What It Represents |
+|------------|--------------------|
+| 2 cm       | Very short link. High load capacity but minimal reach. Good as a lower bound reference. |
+| 5 cm       | A realistic leg segment for a small robot. The length we are most interested in designing around. |
+| 10 cm      | A longer leg for better stride and ground clearance. Included to show how quickly load capacity degrades. |
 
-👉 This is why we perform torque calculations before designing the leg
-### What This Means
-
-This torque value represents the **maximum rotational force** the motor can provide when it is not moving (stall condition).
-
-👉 However, in real applications, the motor operates below this value.
+Running all three makes the trade-off visible rather than abstract.
 
 ---
 
-## Why Convert to SI Units?
+## Calculations at 6V
 
-Motor datasheets use **kg·cm**, but engineering calculations require **Newton-meters (Nm)**.
+Using t = 1.274 N·m and m = t / (g x r):
 
-Conversion:
+**At r = 2 cm (0.02 m)**
 
-1 kg·cm = 0.098 Nm  
+```
+1.274 = m x 9.8 x 0.02
+m = 1.274 / 0.196
+m = 6.5 kg
 
-- At 6V → 1.274 Nm  
-- At 4.8V → 0.9212 Nm  
+Lift force = 6.5 x 9.8 = 63.7 N
+```
 
-👉 This allows us to use physics equations correctly.
+At 2 cm the motor can hold up to 6.5 kg. Plenty of margin, but a 2 cm arm is not a useful leg segment.
 
----
+**At r = 5 cm (0.05 m)**
 
-## Core Theory
+```
+1.274 = m x 9.8 x 0.05
+m = 1.274 / 0.49
+m = 2.6 kg
 
-Torque defines how much rotational force a motor can apply:
+Lift force = 2.6 x 9.8 = 25.48 N
+```
 
-τ = F × r  
+At 5 cm load capacity is 2.6 kg. With a per-leg static requirement of 2 kg and a safety factor of 2, the joint needs to handle 4 kg. A 5 cm arm does not clear that bar cleanly.
 
-Where:
-- F = force
-- r = distance from pivot (lever arm)
+**At r = 10 cm (0.10 m)**
 
-Also:
+```
+1.274 = m x 9.8 x 0.1
+m = 1.274 / 0.98
+m = 1.3 kg
 
-F = m × g  
+Lift force = 1.3 x 9.8 = 12.74 N
+```
 
-So:
-
-τ = m × g × r  
-
----
-
-## Why We Chose 2 cm, 5 cm, 10 cm
-
-These values simulate **different leg lengths**:
-
-| Length | Meaning |
-|------|--------|
-| 2 cm | Very short link (high strength, low reach) |
-| 5 cm | Practical robot leg segment |
-| 10 cm | Long leg (realistic but weaker) |
-
-👉 This helps us understand **design trade-offs**:
-- Stability vs reach
-- Strength vs mobility
+At 10 cm the motor can only support 1.3 kg. With a 2 kg bare requirement before any safety factor, a 10 cm arm is not viable with this motor.
 
 ---
 
-## Calculations (Explained Step-by-Step)
+## Calculations at 4.8V
 
-### Formula Used
+Using t = 0.9212 N·m. Same method, lower torque input.
 
-\tau = m \cdot g \cdot r
+**At r = 2 cm (0.02 m)**
 
-In simple terms => τ = m × g × r
+```
+m = 0.9212 / (9.8 x 0.02)
+m = 0.9212 / 0.196
+m = 4.7 kg
+```
 
-Where:
-- τ = torque (Nm) → from motor specification  
-- m = mass (kg) → what we are solving  
-- g = 9.8 m/s² → gravity  
-- r = distance from motor shaft (meters)  
+**At r = 5 cm (0.05 m)**
 
----
+```
+m = 0.9212 / (9.8 x 0.05)
+m = 0.9212 / 0.49
+m = 1.88 kg
+```
 
-## Case 1: Using 6V Torque (1.274 Nm)
+At 4.8V a 5 cm arm cannot even meet the bare 2 kg per-leg requirement before the safety factor is applied.
 
----
+**At r = 10 cm (0.10 m)**
 
-### 🔹 At 2 cm (0.02 m)
-
-Why 0.02?  
-👉 2 cm = 0.02 meters (converted to SI units)
-
-Substitute into formula:
-
-1.274 = m × 9.8 × 0.02  
-
-Step-by-step:
-
-m = 1.274 / (9.8 × 0.02)  
-m = 1.274 / 0.196  
-m ≈ 6.5 kg  
-
-Now calculate force:
-
-F = m × g = 6.5 × 9.8 ≈ 63.7 N  
-
-👉 Meaning:  
-At 2 cm, the motor can lift about **6.5 kg**
+```
+m = 0.9212 / (9.8 x 0.1)
+m = 0.9212 / 0.98
+m = 0.94 kg
+```
 
 ---
 
-### 🔹 At 5 cm (0.05 m)
+## Results Summary
 
-Convert:
-5 cm = 0.05 m  
+| Arm Length | Load at 6V | Load at 4.8V |
+|------------|------------|--------------|
+| 2 cm       | 6.5 kg     | 4.7 kg       |
+| 5 cm       | 2.6 kg     | 1.88 kg      |
+| 10 cm      | 1.3 kg     | 0.94 kg      |
 
-1.274 = m × 9.8 × 0.05  
-
-m = 1.274 / (9.8 × 0.05)  
-m = 1.274 / 0.49  
-m ≈ 2.6 kg  
-
-Force:
-F = 2.6 × 9.8 ≈ 25.48 N  
-
-👉 Meaning:  
-At 5 cm, lifting capacity drops to **2.6 kg**
+The relationship is inversely proportional. Doubling the arm length halves the load capacity. The voltage difference is significant enough to affect design decisions, particularly around battery state during operation.
 
 ---
 
-### 🔹 At 10 cm (0.1 m)
+## On Stall Torque
 
-Convert:
-10 cm = 0.1 m  
+The 13 kg·cm on the datasheet is the stall torque, meaning the peak output when the shaft is completely stationary. The motor cannot sustain this continuously without overheating.
 
-1.274 = m × 9.8 × 0.1  
-
-m = 1.274 / (9.8 × 0.1)  
-m = 1.274 / 0.98  
-m ≈ 1.3 kg  
-
-Force:
-F = 1.3 × 9.8 ≈ 12.74 N  
-
-👉 Meaning:  
-At 10 cm, motor can lift only **1.3 kg**
+In real operation, usable torque sits closer to 60 to 70 percent of the rated figure. The load values calculated above are theoretical ceilings, not safe operating targets. This is precisely why a safety factor gets applied in Day 2.
 
 ---
 
-## Case 2: Using 4.8V Torque (0.9212 Nm)
+## Notes and Observations
 
-Same formula, lower torque → lower results
+The 4.8V case was included because the robot will not always run at a full 6V, especially as the battery discharges under load. The drop in capacity is significant enough to treat voltage supply as a design variable, not just an environmental condition.
 
----
-
-### 🔹 At 2 cm
-
-m = 0.9212 / (9.8 × 0.02)  
-m ≈ 4.7 kg  
-
-👉 Lower than 6V case
+The 10 cm arm result at either voltage shows that a longer leg would need a noticeably stronger motor. If the design ever scales up, motor selection gets revisited before leg geometry.
 
 ---
 
-### 🔹 At 5 cm
+## Conclusions
 
-m = 0.9212 / (9.8 × 0.05)  
-m ≈ 1.88 kg  
+A few things became clear by the end of Day 1.
 
----
+The MG996R at 6V has enough torque on paper, but the usable margin is tighter than the raw numbers suggest. At 5 cm the theoretical load is 2.6 kg. With a safety factor of 2 and real operating torque sitting at 60 to 70 percent of stall, that margin gets uncomfortable quickly. Leg length is the most sensitive variable in the whole design.
 
-### 🔹 At 10 cm
+The 4.8V case was worth running. The load capacity drops enough that a 5 cm arm cannot meet the bare 2 kg per-leg requirement before any safety factor is applied. Running this robot off a partially discharged battery is not a small concern, it is a design consideration that needs to be carried into the testing phase.
 
-m = 0.9212 / (9.8 × 0.1)  
-m ≈ 0.94 kg  
-
----
-
-## Final Understanding
-
-- Torque (τ) is fixed for a given motor  
-- As distance (r) increases → mass (m) must decrease  
-- This is why longer robot legs are weaker  
-
-👉 This directly affects quadruped design decisions
-## Key Insights
-
-### 1. Length vs Strength Trade-off
-Increasing leg length reduces lifting capability.
-
-👉 This is the most important takeaway for leg design.
-
----
-
-### 2. Voltage Matters
-Lower voltage → lower torque → weaker robot
-
----
-
-### 3. Torque ≠ Actual Performance
-These values are based on **stall torque**
-
----
-
-## Practical Reality (Very Important)
-
-In real-world conditions:
-
-- Motors cannot operate at stall torque continuously  
-- Heat and friction reduce performance  
-- Power supply is not ideal  
-
-👉 Usable torque ≈ **60–70% of rated torque**
-
----
-
-## What This Means for Our Robot
-
-This analysis helps us answer:
-
-- Can this motor lift the robot?  
-- What should be the leg length?  
-- Is this motor sufficient or not?  
-
-👉 These questions will be answered in **Day 2**
-
----
-
-## Conclusion
-
-- Torque determines lifting capability  
-- Arm length directly affects usable force  
-- Voltage impacts motor performance  
-- Real-world performance is lower than theoretical  
-
-This analysis forms the **foundation for designing the quadruped leg system**.
+The core takeaway from today is simple: torque is fixed, distance is the variable, and every centimeter of leg length costs load capacity. That trade-off runs through every decision from here on.
